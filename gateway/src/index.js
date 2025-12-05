@@ -1,19 +1,18 @@
 const express = require("express");
 const { connectDB } = require("./db/connection");
+const jobRoutes = require("./routes/jobs.routes");
+const runRoutes = require("./routes/runs.routes");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(express.json());
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    service: "gateway",
-  });
-});
+app.use("/jobs", jobRoutes);
+app.use("/runs", runRoutes);
 
-(async () => {
-  await connectDB();
-  app.listen(PORT, () => {
-    console.log(`Gateway service listening on port ${PORT}`);
-  });
-})();
+app.get("/health", (req, res) =>
+  res.json({ status: "ok", service: "gateway" })
+);
+
+connectDB();
+
+app.listen(3000, () => console.log("Gateway running at 3000"));

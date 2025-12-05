@@ -1,0 +1,13 @@
+gateway/.env
+agents/scraper-agent/.env
+agents/selector-agent/.env
+agents/parser-agent/.env
+agents/change-detector-agent/.env
+agents/health-monitor-agent/.env
+agents/discovery-agent/.env
+agents/change-detector-agent/.env
+agents/health-monitor-agent/.env
+agents/discovery-agent/.env
+agents/change-detector-agent/.env
+agents/health-monitor-agent/.env
+agents/discovery-agent/.env

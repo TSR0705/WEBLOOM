@@ -44,6 +44,7 @@ services:
     environment:
       PORT: 3000
       MONGODB_URI: mongodb://webloom-mongo:27017/webloom
+      RABBITMQ_URI: amqp://webloom-rabbitmq:5672
 
   scraper-agent:
     build:
@@ -55,6 +56,9 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    environment:
+      MONGODB_URI: mongodb://webloom-mongo:27017/webloom
+      RABBITMQ_URI: amqp://webloom-rabbitmq:5672
 
 volumes:
   mongo_data:
