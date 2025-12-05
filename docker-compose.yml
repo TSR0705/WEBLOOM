@@ -43,6 +43,7 @@ services:
         condition: service_healthy
     environment:
       PORT: 3000
+      MONGODB_URI: mongodb://webloom-mongo:27017/webloom
 
   scraper-agent:
     build:
