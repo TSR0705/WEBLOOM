@@ -1,19 +1,14 @@
 const amqp = require("amqplib");
 const axios = require("axios");
-const { MongoClient, ObjectId } = require("mongodb");
 
 (async () => {
   console.log("Scraper Agent started");
-
-  // Connect DB
-  const mongo = new MongoClient(process.env.MONGODB_URI);
-  await mongo.connect();
-  const db = mongo.db("webloom");
 
   // Connect Queue
   const conn = await amqp.connect(process.env.RABBITMQ_URI);
   const channel = await conn.createChannel();
   await channel.assertQueue("job.start");
+  await channel.assertQueue("html.raw");
 
   console.log("✔ Listening on job.start queue");
 
@@ -29,21 +24,15 @@ const { MongoClient, ObjectId } = require("mongodb");
       const response = await axios.get(url);
       const html = response.data;
 
-      await db.collection("snapshots").insertOne({
+      const htmlPayload = JSON.stringify({
         jobId,
+        runId,
         url,
         html,
-        createdAt: new Date(),
       });
 
-      await db
-        .collection("job_runs")
-        .updateOne(
-          { _id: new ObjectId(runId) },
-          { $set: { status: "completed", finishedAt: new Date() } }
-        );
-
-      console.log(`✔ Snapshot stored for ${url}`);
+      channel.sendToQueue("html.raw", Buffer.from(htmlPayload));
+      console.log("✔ Published raw HTML message");
 
       channel.ack(msg);
     } catch (err) {

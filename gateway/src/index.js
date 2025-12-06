@@ -13,6 +13,7 @@ app.get("/health", (req, res) =>
   res.json({ status: "ok", service: "gateway" })
 );
 
-connectDB();
-
-app.listen(3000, () => console.log("Gateway running at 3000"));
+(async () => {
+  await connectDB();
+  app.listen(3000, () => console.log("Gateway running at 3000"));
+})();

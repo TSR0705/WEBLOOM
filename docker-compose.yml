@@ -34,6 +34,7 @@ services:
       context: ./gateway
       dockerfile: Dockerfile
     container_name: webloom-gateway
+    restart: always
     ports:
       - "3000:3000"
     depends_on:
@@ -42,23 +43,42 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
+      NODE_ENV: production
       PORT: 3000
       MONGODB_URI: mongodb://webloom-mongo:27017/webloom
-      RABBITMQ_URI: amqp://webloom-rabbitmq:5672
+      RABBITMQ_URI: amqp://guest:guest@webloom-rabbitmq:5672
 
   scraper-agent:
     build:
       context: ./agents/scraper-agent
       dockerfile: Dockerfile
     container_name: webloom-scraper-agent
+    restart: always
     depends_on:
       mongo:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
+      NODE_ENV: production
       MONGODB_URI: mongodb://webloom-mongo:27017/webloom
-      RABBITMQ_URI: amqp://webloom-rabbitmq:5672
+      RABBITMQ_URI: amqp://guest:guest@webloom-rabbitmq:5672
+
+  parser-agent:
+    build:
+      context: ./agents/parser-agent
+      dockerfile: Dockerfile
+    container_name: webloom-parser-agent
+    restart: always
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://webloom-mongo:27017/webloom
+      RABBITMQ_URI: amqp://guest:guest@webloom-rabbitmq:5672
 
 volumes:
   mongo_data:

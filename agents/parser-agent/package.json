@@ -1,0 +1,11 @@
+{
+  "name": "parser-agent",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "amqplib": "0.10.3",
+    "mongodb": "5.9.0",
+    "cheerio": "1.0.0-rc.12"
+  }
+}
