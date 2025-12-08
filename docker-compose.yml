@@ -80,5 +80,21 @@ services:
       MONGODB_URI: mongodb://webloom-mongo:27017/webloom
       RABBITMQ_URI: amqp://guest:guest@webloom-rabbitmq:5672
 
+  change-detector-agent:
+    build:
+      context: ./agents/change-detector-agent
+      dockerfile: Dockerfile
+    container_name: webloom-change-detector-agent
+    restart: always
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://webloom-mongo:27017/webloom
+      RABBITMQ_URI: amqp://guest:guest@webloom-rabbitmq:5672
+
 volumes:
   mongo_data:

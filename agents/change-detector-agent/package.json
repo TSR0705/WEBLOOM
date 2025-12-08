@@ -1,0 +1,14 @@
+{
+  "name": "change-detector-agent",
+  "version": "1.0.0",
+  "description": "Webloom Change Detector Agent",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "mongodb": "^6.0.0"
+  }
+}

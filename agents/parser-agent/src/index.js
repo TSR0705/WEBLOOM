@@ -41,6 +41,9 @@ async function connectRabbitMQ() {
   });
 
   const channel = await conn.createChannel();
+
+  // 👇 This is NEW — very important
+  await channel.assertExchange("snapshot.exchange", "fanout", { durable: true });
   await channel.assertQueue("html.raw");
 
   console.log("✔ Connected to RabbitMQ & Listening on html.raw queue");
@@ -48,13 +51,12 @@ async function connectRabbitMQ() {
   return { conn, channel };
 }
 
-
 async function startParser() {
   console.log("\n🔄 Starting Parser Agent...");
 
   const MONGODB_URI = process.env.MONGODB_URI;
-
   let db;
+
   try {
     console.log("⏳ Connecting to MongoDB...");
     const mongo = new MongoClient(MONGODB_URI);
@@ -107,26 +109,31 @@ async function startParser() {
         url,
         html,
         version,
-        parsed: {
-          title,
-          description,
-          text,
-          links
-        },
+        parsed: { title, description, text, links },
         createdAt: new Date()
       });
 
       await db.collection("job_runs").updateOne(
         { _id: new ObjectId(runId) },
-        {
-          $set: {
-            status: "completed",
-            finishedAt: new Date()
-          }
-        }
+        { $set: { status: "completed", finishedAt: new Date() } }
       );
 
       console.log(`✨ Snapshot saved — version v${version}`);
+
+      // 👇 THIS IS THE LINE YOU MISSED EARLIER
+      channel.publish(
+        "snapshot.exchange",
+        "",
+        Buffer.from(JSON.stringify({
+          jobId,
+          runId,
+          url,
+          currentVersion: version
+        }))
+      );
+
+      console.log(`📌 Published snapshot-created event for version v${version}`);
+
       channel.ack(msg);
 
     } catch (err) {
