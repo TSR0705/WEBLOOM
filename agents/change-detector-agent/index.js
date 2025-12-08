@@ -5,12 +5,32 @@ function wait(ms) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
+// *** Character-Based Change Score ***
+function computeChangeScore(previousText, currentText) {
+  const maxLength = Math.max(previousText.length, currentText.length);
+  const minLength = Math.min(previousText.length, currentText.length);
+
+  if (maxLength === 0) return 0; // both empty → no change
+
+  let matchCount = 0;
+
+  for (let i = 0; i < minLength; i++) {
+    if (previousText[i] === currentText[i]) {
+      matchCount++;
+    }
+  }
+
+  // total changed chars (including new extra chars)
+  const totalDifference = maxLength - matchCount;
+  return totalDifference / maxLength;
+}
+
 async function connectRabbitMQ() {
   console.log("⏳ Verifying RabbitMQ readiness...");
 
   while (true) {
     try {
-      const testConn = await amqp.connect({
+      const conn = await amqp.connect({
         protocol: "amqp",
         hostname: "webloom-rabbitmq",
         port: 5672,
@@ -19,9 +39,10 @@ async function connectRabbitMQ() {
         frameMax: 131072,
       });
 
-      await testConn.close();
+      await conn.close();
       console.log("✔ RabbitMQ is ready");
       break;
+
     } catch (err) {
       console.log("⏳ Waiting for RabbitMQ to fully initialize...");
       await wait(3000);
@@ -40,21 +61,22 @@ async function connectRabbitMQ() {
 
   const channel = await conn.createChannel();
 
-  // 🔴 THIS WAS MISSING EARLIER
-  await channel.assertExchange("snapshot.exchange", "fanout", { durable: true });
+  await channel.assertExchange("snapshot.exchange", "fanout", {
+    durable: true
+  });
+
   await channel.assertQueue("snapshot.created", { durable: true });
+
   await channel.bindQueue("snapshot.created", "snapshot.exchange", "");
 
-  console.log(
-    "✔ Connected to RabbitMQ, queue 'snapshot.created' bound to exchange 'snapshot.exchange'"
-  );
-  console.log("✔ Listening on snapshot.created queue");
+  console.log("✔ Connected to RabbitMQ");
+  console.log("✔ Queue bound: snapshot.created → snapshot.exchange");
 
   return { conn, channel };
 }
 
 async function startChangeDetector() {
-  console.log("\n🔄 Change detector waiting for messages...");
+  console.log("\n🔄 Change detector agent is starting...");
 
   const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -65,16 +87,16 @@ async function startChangeDetector() {
     await mongo.connect();
     db = mongo.db("webloom");
     console.log("✔ MongoDB Connected");
+
   } catch (err) {
-    console.error(
-      "❌ MongoDB Connection Failed. Retrying in 5s...",
-      err.message
-    );
+    console.error("❌ MongoDB Connection Failed → Retrying...");
     setTimeout(startChangeDetector, 5000);
     return;
   }
 
   const { conn, channel } = await connectRabbitMQ();
+
+  console.log("▶ Listening for snapshot-created events");
 
   channel.consume("snapshot.created", async (msg) => {
     if (!msg) return;
@@ -83,92 +105,85 @@ async function startChangeDetector() {
       const payload = JSON.parse(msg.content.toString());
       const { jobId, runId, url, currentVersion } = payload;
 
-      console.log(`🧠 Analyzing version v${currentVersion} for job ${jobId}`);
+      console.log(`🧠 Comparing version v${currentVersion}`);
 
-      // Fetch current snapshot
+      // current snapshot
       const currentDoc = await db.collection("snapshots").findOne({
         jobId,
         url,
-        version: currentVersion,
+        version: currentVersion
       });
 
       if (!currentDoc) {
-        console.error(
-          `❌ Current snapshot not found: version ${currentVersion}`
-        );
+        console.error(`❌ Snapshot version v${currentVersion} not found`);
         channel.nack(msg, false, true);
         return;
       }
 
       const previousVersion = currentVersion - 1;
 
-      if (previousVersion === 0) {
-        console.log("📌 No previous version found (v1), skipping change detection");
+      if (previousVersion <= 0) {
+        console.log("📌 No previous version exists → skipping");
         channel.ack(msg);
         return;
       }
 
-      // Fetch previous snapshot
+      // previous snapshot
       const previousDoc = await db.collection("snapshots").findOne({
         jobId,
         url,
-        version: previousVersion,
+        version: previousVersion
       });
 
       if (!previousDoc) {
-        console.log(
-          `📌 Previous snapshot v${previousVersion} not found, skipping`
-        );
+        console.log(`📌 Previous snapshot v${previousVersion} missing → skipping`);
         channel.ack(msg);
         return;
       }
 
-      // Extract text from both snapshots
       const previousText = previousDoc.parsed?.text || "";
       const currentText = currentDoc.parsed?.text || "";
 
-      const commonLength = Math.min(previousText.length, currentText.length);
-      const similarity =
-        commonLength > 0 ? commonLength / previousText.length : 0;
-      const score = 1 - similarity;
+      // 🔥 New correct change calculation
+      const changeScore = computeChangeScore(previousText, currentText);
 
       let changeLabel;
-      if (score <= 0.2) {
-        changeLabel = "low";
-      } else if (score <= 0.6) {
-        changeLabel = "medium";
-      } else {
-        changeLabel = "high";
-      }
+      if (changeScore <= 0.10) changeLabel = "low";
+      else if (changeScore <= 0.40) changeLabel = "medium";
+      else changeLabel = "high";
 
+      // store result
       await db.collection("changes").insertOne({
         jobId,
         url,
         runVersion: currentVersion,
         previousVersion,
-        changeScore: score,
+        changeScore,
         changeLabel,
         createdAt: new Date(),
       });
 
+      // update job_runs entry
       await db.collection("job_runs").updateOne(
         { _id: new ObjectId(runId) },
         {
           $set: {
             analysisStatus: "done",
-            analysisScore: score,
+            analysisScore: changeScore,
             analysisLabel: changeLabel,
-            analysisFinishedAt: new Date(),
-          },
+            analysisFinishedAt: new Date()
+          }
         }
       );
 
       console.log(
-        `✨ Change stored successfully - v${previousVersion} → v${currentVersion}, Score: ${score.toFixed(
-          2
+        `✨ Change stored — v${previousVersion} → v${currentVersion}, Score: ${changeScore.toFixed(
+          3
         )}, Label: ${changeLabel}`
       );
+
       channel.ack(msg);
+
     } catch (err) {
       console.error("❌ Change detection error:", err);
       channel.nack(msg, false, true);
@@ -176,14 +191,12 @@ async function startChangeDetector() {
   });
 
   conn.on("close", () => {
-    console.error(
-      "⚠️ RabbitMQ connection closed. Restarting change detector..."
-    );
+    console.error("⚠ RabbitMQ closed → restarting...");
     setTimeout(startChangeDetector, 5000);
   });
 
   conn.on("error", (err) => {
-    console.error("⚠️ RabbitMQ error:", err);
+    console.error("⚠ RabbitMQ error →", err);
   });
 }
 
