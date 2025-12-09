@@ -1,10 +1,17 @@
 const { getDB } = require("../db/connection");
+const { ObjectId } = require("mongodb");
+
+function normalizeJobId(jobId) {
+  return jobId?.toString?.() ?? String(jobId);
+}
 
 async function getSnapshotsForJob(jobId) {
   const db = await getDB();
+  const id = normalizeJobId(jobId);
+
   return db
     .collection("snapshots")
-    .find({ jobId })
+    .find({ jobId: id })
     .project({
       _id: 0,
       version: 1,
@@ -18,77 +25,92 @@ async function getSnapshotsForJob(jobId) {
 
 async function getRunsForJob(jobId) {
   const db = await getDB();
+  const id = normalizeJobId(jobId);
+
   return db
     .collection("job_runs")
-    .find({ jobId })
-    .project({
-      jobId: 0,
-    })
-    .sort({ startedAt: 1 })
+    .find({ jobId: id })
+    .project({})
+    .sort({ createdAt: 1, startedAt: 1 })
     .toArray();
 }
 
 async function getChangeHistory(jobId) {
   const db = await getDB();
+  const id = normalizeJobId(jobId);
+
   return db
     .collection("changes")
-    .find({ jobId })
-    .project({
-      _id: 0,
-      jobId: 0,
-    })
-    .sort({ createdAt: 1 })
+    .find({ jobId: id })
+    .project({ _id: 0 })
+    .sort({ runVersion: 1 })
     .toArray();
+}
+
+async function getSnapshotWithHtml(jobId, version) {
+  const db = await getDB();
+  const id = normalizeJobId(jobId);
+
+  return db.collection("snapshots").findOne(
+    { jobId: id, version },
+    {
+      projection: { _id: 0 },
+    }
+  );
 }
 
 async function getSnapshotByVersion(jobId, version) {
   const db = await getDB();
+  const id = normalizeJobId(jobId);
+
   return db.collection("snapshots").findOne(
-    { jobId, version },
+    { jobId: id, version },
     {
       projection: {
         _id: 0,
-        html: 0,
         url: 0,
       },
     }
   );
 }
 
+async function getHistoryCollections(jobId) {
+  const db = await getDB();
+  const id = normalizeJobId(jobId);
+
+  const [runs, snapshots, changes] = await Promise.all([
+    db.collection("job_runs").find({ jobId: id }).sort({ createdAt: 1 }).toArray(),
+    db.collection("snapshots").find({ jobId: id }).sort({ version: 1 }).toArray(),
+    db.collection("changes").find({ jobId: id }).sort({ runVersion: 1 }).toArray(),
+  ]);
+
+  return { runs, snapshots, changes };
+}
+
 async function getJobStats(jobId) {
   const db = await getDB();
+  const id = normalizeJobId(jobId);
 
   const [snapshotAgg] = await db
     .collection("snapshots")
     .aggregate([
-      { $match: { jobId } },
-      {
-        $group: {
-          _id: null,
-          totalVersions: { $max: "$version" },
-        },
-      },
+      { $match: { jobId: id } },
+      { $group: { _id: null, totalVersions: { $max: "$version" } } },
     ])
     .toArray();
 
   const [changeAgg] = await db
     .collection("changes")
     .aggregate([
-      { $match: { jobId } },
+      { $match: { jobId: id } },
       {
         $group: {
           _id: null,
-          highCount: {
-            $sum: { $cond: [{ $eq: ["$changeLabel", "high"] }, 1, 0] },
-          },
-          mediumCount: {
-            $sum: { $cond: [{ $eq: ["$changeLabel", "medium"] }, 1, 0] },
-          },
-          lowCount: {
-            $sum: { $cond: [{ $eq: ["$changeLabel", "low"] }, 1, 0] },
-          },
+          highCount: { $sum: { $cond: [{ $eq: ["$changeLabel", "high"] }, 1, 0] } },
+          mediumCount: { $sum: { $cond: [{ $eq: ["$changeLabel", "medium"] }, 1, 0] } },
+          lowCount: { $sum: { $cond: [{ $eq: ["$changeLabel", "low"] }, 1, 0] } },
           avgScore: { $avg: "$changeScore" },
-        },
+        }
       },
     ])
     .toArray();
@@ -96,13 +118,13 @@ async function getJobStats(jobId) {
   const [runAgg] = await db
     .collection("job_runs")
     .aggregate([
-      { $match: { jobId } },
+      { $match: { jobId: id } },
       {
         $group: {
           _id: null,
           firstRunAt: { $min: "$startedAt" },
           lastRunAt: { $max: "$startedAt" },
-        },
+        }
       },
     ])
     .toArray();
@@ -123,5 +145,8 @@ module.exports = {
   getRunsForJob,
   getChangeHistory,
   getSnapshotByVersion,
+  getSnapshotWithHtml,
   getJobStats,
+  getHistoryCollections,
 };
+
