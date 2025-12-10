@@ -115,7 +115,7 @@ async function startParser() {
 
       await db.collection("job_runs").updateOne(
         { _id: new ObjectId(runId) },
-        { $set: { status: "completed", finishedAt: new Date() } }
+        { $set: { status: "completed", finishedAt: new Date() , runVersion: version } }
       );
 
       console.log(`✨ Snapshot saved — version v${version}`);

@@ -15,4 +15,25 @@ async function getJobById(id) {
   return db.collection("jobs").findOne({ _id: new ObjectId(id) });
 }
 
-module.exports = { createJob, getJobById };
+async function getAllJobs() {
+  const db = await getDB();
+  return db
+    .collection("jobs")
+    .find(
+      {},
+      {
+        projection: {
+          name: 1,
+          url: 1,
+          schedule: 1,
+          createdAt: 1,
+          status: 1,
+          nextRunAt: 1,
+        },
+      }
+    )
+    .sort({ createdAt: -1 })
+    .toArray();
+}
+
+module.exports = { createJob, getJobById, getAllJobs };

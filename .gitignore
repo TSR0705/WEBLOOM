@@ -11,3 +11,5 @@ agents/discovery-agent/.env
 agents/change-detector-agent/.env
 agents/health-monitor-agent/.env
 agents/discovery-agent/.env
+
+NODE_MODULES

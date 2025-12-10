@@ -1,5 +1,4 @@
 const { getDB } = require("../db/connection");
-const { ObjectId } = require("mongodb");
 
 function normalizeJobId(jobId) {
   return jobId?.toString?.() ?? String(jobId);
@@ -79,9 +78,21 @@ async function getHistoryCollections(jobId) {
   const id = normalizeJobId(jobId);
 
   const [runs, snapshots, changes] = await Promise.all([
-    db.collection("job_runs").find({ jobId: id }).sort({ createdAt: 1 }).toArray(),
-    db.collection("snapshots").find({ jobId: id }).sort({ version: 1 }).toArray(),
-    db.collection("changes").find({ jobId: id }).sort({ runVersion: 1 }).toArray(),
+    db
+      .collection("job_runs")
+      .find({ jobId: id })
+      .sort({ createdAt: 1 })
+      .toArray(),
+    db
+      .collection("snapshots")
+      .find({ jobId: id })
+      .sort({ version: 1 })
+      .toArray(),
+    db
+      .collection("changes")
+      .find({ jobId: id })
+      .sort({ runVersion: 1 })
+      .toArray(),
   ]);
 
   return { runs, snapshots, changes };
@@ -106,11 +117,17 @@ async function getJobStats(jobId) {
       {
         $group: {
           _id: null,
-          highCount: { $sum: { $cond: [{ $eq: ["$changeLabel", "high"] }, 1, 0] } },
-          mediumCount: { $sum: { $cond: [{ $eq: ["$changeLabel", "medium"] }, 1, 0] } },
-          lowCount: { $sum: { $cond: [{ $eq: ["$changeLabel", "low"] }, 1, 0] } },
+          highCount: {
+            $sum: { $cond: [{ $eq: ["$changeLabel", "high"] }, 1, 0] },
+          },
+          mediumCount: {
+            $sum: { $cond: [{ $eq: ["$changeLabel", "medium"] }, 1, 0] },
+          },
+          lowCount: {
+            $sum: { $cond: [{ $eq: ["$changeLabel", "low"] }, 1, 0] },
+          },
           avgScore: { $avg: "$changeScore" },
-        }
+        },
       },
     ])
     .toArray();
@@ -124,7 +141,7 @@ async function getJobStats(jobId) {
           _id: null,
           firstRunAt: { $min: "$startedAt" },
           lastRunAt: { $max: "$startedAt" },
-        }
+        },
       },
     ])
     .toArray();
@@ -149,4 +166,3 @@ module.exports = {
   getJobStats,
   getHistoryCollections,
 };
-
