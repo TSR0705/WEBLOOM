@@ -2,8 +2,14 @@ import { cn } from '../../utils/cn'
 
 export function Table({ className, children, ...props }) {
   return (
-    <div className="w-full overflow-auto">
-      <table className={cn('w-full caption-bottom text-sm', className)} {...props}>
+    <div className="relative w-full overflow-x-auto">
+      <table
+        className={cn(
+          'w-full border-collapse text-sm text-gray-200',
+          className
+        )}
+        {...props}
+      >
         {children}
       </table>
     </div>
@@ -11,12 +17,28 @@ export function Table({ className, children, ...props }) {
 }
 
 export function TableHeader({ className, children, ...props }) {
-  return <thead className={cn('[&_tr]:border-b', className)} {...props}>{children}</thead>
+  return (
+    <thead
+      className={cn(
+        'border-b border-white/10',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </thead>
+  )
 }
 
 export function TableBody({ className, children, ...props }) {
   return (
-    <tbody className={cn('[&_tr:last-child]:border-0', className)} {...props}>
+    <tbody
+      className={cn(
+        'divide-y divide-white/5',
+        className
+      )}
+      {...props}
+    >
       {children}
     </tbody>
   )
@@ -25,7 +47,14 @@ export function TableBody({ className, children, ...props }) {
 export function TableRow({ className, children, ...props }) {
   return (
     <tr
-      className={cn('border-b transition-colors hover:bg-gray-50 data-[state=selected]:bg-gray-100', className)}
+      className={cn(
+        `
+        transition
+        hover:bg-white/[0.04]
+        data-[state=selected]:bg-white/[0.06]
+        `,
+        className
+      )}
       {...props}
     >
       {children}
@@ -37,7 +66,15 @@ export function TableHead({ className, children, ...props }) {
   return (
     <th
       className={cn(
-        'h-12 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0',
+        `
+        px-4 py-3
+        text-left
+        text-xs
+        font-medium
+        uppercase
+        tracking-wide
+        text-gray-400
+        `,
         className
       )}
       {...props}
@@ -49,9 +86,18 @@ export function TableHead({ className, children, ...props }) {
 
 export function TableCell({ className, children, ...props }) {
   return (
-    <td className={cn('p-4 align-middle [&:has([role=checkbox])]:pr-0', className)} {...props}>
+    <td
+      className={cn(
+        `
+        px-4 py-4
+        align-middle
+        text-gray-200
+        `,
+        className
+      )}
+      {...props}
+    >
       {children}
     </td>
   )
 }
-
