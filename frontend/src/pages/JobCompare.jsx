@@ -1,236 +1,184 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useJobCompare, useJobHistory } from '../hooks/useJobs'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Skeleton } from '../components/ui/skeleton'
 import { Badge } from '../components/ui/badge'
 import { ChangeLabelBadge } from '../components/ChangeLabelBadge'
-import { ArrowLeft } from 'lucide-react'
+import {
+  ArrowLeft,
+  GitCompare,
+  FileDiff,
+  Link2,
+} from 'lucide-react'
 
 export default function JobCompare() {
   const { jobId } = useParams()
   const navigate = useNavigate()
+
   const { data: historyData } = useJobHistory(jobId)
-  const timeline = historyData?.timeline || [];
+  const timeline = historyData?.timeline || []
+
   const versions = timeline
-    .map((item) => item.version)
-    .filter((v) => v !== null && v !== undefined)
+    .map(v => v.version)
+    .filter(v => v != null)
     .sort((a, b) => a - b)
 
-  const [v1, setV1] = useState(versions.length >= 2 ? versions[0] : null)
-  const [v2, setV2] = useState(versions.length >= 2 ? versions[versions.length - 1] : null)
+  const [v1, setV1] = useState(versions.at(0))
+  const [v2, setV2] = useState(versions.at(-1))
 
   const { data, isLoading, error } = useJobCompare(jobId, v1, v2)
 
-  const handleCompare = () => {
-    if (v1 && v2 && v1 !== v2) {
-    }
-  }
-
   if (versions.length < 2) {
     return (
-      <div className="container mx-auto p-6">
-        <Button variant="ghost" onClick={() => navigate(`/jobs/${jobId}/details`)} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Details
-        </Button>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-gray-600">Not enough versions to compare. Need at least 2 versions.</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="bg-white/5 border border-white/5">
+        <CardContent className="py-6">
+          <p className="text-gray-400">
+            Not enough versions to perform comparison.
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 
-  const compareData = data
-
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate(`/jobs/${jobId}/details`)} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Details
-        </Button>
-        <h1 className="text-3xl font-bold mb-2">Compare Versions</h1>
-        <p className="text-gray-600">
-          Job ID: <span className="font-mono">{jobId}</span>
+    <div className="space-y-10">
+      {/* Back */}
+      <Button
+        variant="ghost"
+        onClick={() => navigate(`/jobs/${jobId}/details`)}
+        className="text-gray-400 hover:text-[#32FFC3] w-fit"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Job
+      </Button>
+
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-semibold text-white">
+          Version Comparison
+        </h1>
+        <p className="text-sm text-gray-400 mt-1">
+          Inspect structural and semantic changes between snapshots
         </p>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Select Versions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">From Version</label>
-              <select
-                value={v1 || ''}
-                onChange={(e) => setV1(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {versions.map((v) => (
-                  <option key={v} value={v}>
-                    Version {v}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">To Version</label>
-              <select
-                value={v2 || ''}
-                onChange={(e) => setV2(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {versions.map((v) => (
-                  <option key={v} value={v}>
-                    Version {v}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-end">
-              <Button onClick={handleCompare} disabled={!v1 || !v2 || v1 === v2}>
-                Compare
-              </Button>
-            </div>
+      {/* Version Selector */}
+      <Card className="bg-white/5 border border-white/5 backdrop-blur">
+        <CardContent className="py-6 flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+            <p className="text-xs text-gray-400 mb-1">Base Version</p>
+            <select
+              value={v1}
+              onChange={e => setV1(Number(e.target.value))}
+              className="
+                w-full bg-black/40 border border-white/10
+                rounded-lg px-3 py-2 text-gray-200
+                focus:outline-none focus:ring-1 focus:ring-[#32FFC3]
+              "
+            >
+              {versions.map(v => (
+                <option key={v} value={v}>v{v}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1">
+            <p className="text-xs text-gray-400 mb-1">Target Version</p>
+            <select
+              value={v2}
+              onChange={e => setV2(Number(e.target.value))}
+              className="
+                w-full bg-black/40 border border-white/10
+                rounded-lg px-3 py-2 text-gray-200
+                focus:outline-none focus:ring-1 focus:ring-[#32FFC3]
+              "
+            >
+              {versions.map(v => (
+                <option key={v} value={v}>v{v}</option>
+              ))}
+            </select>
           </div>
         </CardContent>
       </Card>
 
+      {/* Loading */}
       {isLoading && (
-        <Card>
-          <CardContent className="pt-6">
-            <Skeleton className="h-64" />
-          </CardContent>
-        </Card>
+        <Skeleton className="h-[320px]" />
       )}
 
+      {/* Error */}
       {error && (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-red-600">Error comparing versions: {error.message || 'Unknown error'}</p>
+        <Card className="bg-white/5 border border-white/5">
+          <CardContent className="py-6 text-red-400">
+            Failed to compare versions
           </CardContent>
         </Card>
       )}
 
-      {compareData && (
+      {/* Results */}
+      {data && (
         <>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Comparison Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Base Version</p>
-                  <p className="text-lg font-semibold">v{compareData.baseVersion}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Target Version</p>
-                  <p className="text-lg font-semibold">v{compareData.targetVersion}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Change Score</p>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-lg">
-                      {compareData.changeScore?.toFixed(4) || '0.0000'}
-                    </Badge>
-                    <ChangeLabelBadge label={compareData.changeLabel} />
-                  </div>
-                </div>
+          {/* Summary */}
+          <Card className="bg-white/5 border border-white/5">
+            <CardContent className="py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <p className="text-xs text-gray-400">Base</p>
+                <p className="text-lg text-white">v{data.baseVersion}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">Target</p>
+                <p className="text-lg text-white">v{data.targetVersion}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge className="bg-white/10 text-gray-200">
+                  {data.changeScore?.toFixed(4)}
+                </Badge>
+                <ChangeLabelBadge label={data.changeLabel} />
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Text Changes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-green-700 mb-2">Added Words ({compareData.diffs?.text?.added?.length || 0})</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {compareData.diffs?.text?.added?.length > 0 ? (
-                        compareData.diffs.text.added.slice(0, 50).map((word, idx) => (
-                          <Badge key={idx} variant="success" className="text-xs">
-                            {word}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-sm text-gray-500">No words added</span>
-                      )}
-                      {compareData.diffs?.text?.added?.length > 50 && (
-                        <span className="text-xs text-gray-500">... and {compareData.diffs.text.added.length - 50} more</span>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-red-700 mb-2">Removed Words ({compareData.diffs?.text?.removed?.length || 0})</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {compareData.diffs?.text?.removed?.length > 0 ? (
-                        compareData.diffs.text.removed.slice(0, 50).map((word, idx) => (
-                          <Badge key={idx} variant="destructive" className="text-xs">
-                            {word}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-sm text-gray-500">No words removed</span>
-                      )}
-                      {compareData.diffs?.text?.removed?.length > 50 && (
-                        <span className="text-xs text-gray-500">... and {compareData.diffs.text.removed.length - 50} more</span>
-                      )}
-                    </div>
-                  </div>
+          {/* Diff Panels */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Text */}
+            <Card className="bg-white/5 border border-white/5">
+              <CardContent className="py-6 space-y-6">
+                <div className="flex items-center gap-2 text-white">
+                  <FileDiff className="w-5 h-5 text-[#32FFC3]" />
+                  <h2 className="text-lg font-medium">Text Diff</h2>
                 </div>
+
+                <DiffBlock
+                  title="Added"
+                  items={data.diffs?.text?.added}
+                  variant="positive"
+                />
+                <DiffBlock
+                  title="Removed"
+                  items={data.diffs?.text?.removed}
+                  variant="negative"
+                />
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Link Changes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-green-700 mb-2">Added Links ({compareData.diffs?.links?.added?.length || 0})</h3>
-                    <ul className="space-y-1">
-                      {compareData.diffs?.links?.added?.length > 0 ? (
-                        compareData.diffs.links.added.map((link, idx) => (
-                          <li key={idx} className="text-sm">
-                            <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                              {link}
-                            </a>
-                          </li>
-                        ))
-                      ) : (
-                        <li className="text-sm text-gray-500">No links added</li>
-                      )}
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-red-700 mb-2">Removed Links ({compareData.diffs?.links?.removed?.length || 0})</h3>
-                    <ul className="space-y-1">
-                      {compareData.diffs?.links?.removed?.length > 0 ? (
-                        compareData.diffs.links.removed.map((link, idx) => (
-                          <li key={idx} className="text-sm">
-                            <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                              {link}
-                            </a>
-                          </li>
-                        ))
-                      ) : (
-                        <li className="text-sm text-gray-500">No links removed</li>
-                      )}
-                    </ul>
-                  </div>
+            {/* Links */}
+            <Card className="bg-white/5 border border-white/5">
+              <CardContent className="py-6 space-y-6">
+                <div className="flex items-center gap-2 text-white">
+                  <Link2 className="w-5 h-5 text-[#32FFC3]" />
+                  <h2 className="text-lg font-medium">Link Diff</h2>
                 </div>
+
+                <DiffBlock
+                  title="Added"
+                  items={data.diffs?.links?.added}
+                />
+                <DiffBlock
+                  title="Removed"
+                  items={data.diffs?.links?.removed}
+                />
               </CardContent>
             </Card>
           </div>
@@ -240,3 +188,37 @@ export default function JobCompare() {
   )
 }
 
+function DiffBlock({ title, items = [], variant }) {
+  return (
+    <div>
+      <p className="text-xs text-gray-400 mb-2">
+        {title} ({items.length})
+      </p>
+
+      {items.length === 0 ? (
+        <p className="text-sm text-gray-500">No changes</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {items.slice(0, 40).map((item, i) => (
+            <Badge
+              key={i}
+              className={`
+                text-xs
+                ${variant === 'positive' && 'bg-green-500/15 text-green-400'}
+                ${variant === 'negative' && 'bg-red-500/15 text-red-400'}
+                ${!variant && 'bg-white/10 text-gray-300'}
+              `}
+            >
+              {item}
+            </Badge>
+          ))}
+          {items.length > 40 && (
+            <span className="text-xs text-gray-500">
+              +{items.length - 40} more
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
