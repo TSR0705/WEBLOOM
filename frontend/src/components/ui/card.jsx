@@ -3,7 +3,19 @@ import { cn } from '../../utils/cn'
 export function Card({ className, children, ...props }) {
   return (
     <div
-      className={cn('rounded-lg border border-gray-200 bg-white shadow-sm', className)}
+      className={cn(
+        `
+        relative
+        rounded-xl
+        border border-white/5
+        bg-white/5
+        backdrop-blur
+        shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_40px_rgba(2,6,23,0.6)]
+        transition
+        hover:border-white/10
+        `,
+        className
+      )}
       {...props}
     >
       {children}
@@ -13,7 +25,13 @@ export function Card({ className, children, ...props }) {
 
 export function CardHeader({ className, children, ...props }) {
   return (
-    <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props}>
+    <div
+      className={cn(
+        'flex flex-col gap-1.5 px-6 pt-6',
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   )
@@ -21,7 +39,13 @@ export function CardHeader({ className, children, ...props }) {
 
 export function CardTitle({ className, children, ...props }) {
   return (
-    <h3 className={cn('text-2xl font-semibold leading-none tracking-tight', className)} {...props}>
+    <h3
+      className={cn(
+        'text-lg font-semibold tracking-tight text-white',
+        className
+      )}
+      {...props}
+    >
       {children}
     </h3>
   )
@@ -29,7 +53,13 @@ export function CardTitle({ className, children, ...props }) {
 
 export function CardDescription({ className, children, ...props }) {
   return (
-    <p className={cn('text-sm text-gray-500', className)} {...props}>
+    <p
+      className={cn(
+        'text-sm text-gray-400',
+        className
+      )}
+      {...props}
+    >
       {children}
     </p>
   )
@@ -37,7 +67,13 @@ export function CardDescription({ className, children, ...props }) {
 
 export function CardContent({ className, children, ...props }) {
   return (
-    <div className={cn('p-6 pt-0', className)} {...props}>
+    <div
+      className={cn(
+        'px-6 py-5',
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   )
@@ -45,9 +81,14 @@ export function CardContent({ className, children, ...props }) {
 
 export function CardFooter({ className, children, ...props }) {
   return (
-    <div className={cn('flex items-center p-6 pt-0', className)} {...props}>
+    <div
+      className={cn(
+        'flex items-center justify-between px-6 pb-6',
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   )
 }
-
