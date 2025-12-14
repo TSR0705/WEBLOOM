@@ -1,16 +1,17 @@
-import { useParams, useNavigate } from 'react-router-dom'
-import { useJob, useJobStats } from '../hooks/useJobs'
-import { Card, CardContent } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Skeleton } from '../components/ui/skeleton'
-import { ChangeLabelBadge } from '../components/ChangeLabelBadge'
+import { useParams, useNavigate } from "react-router-dom"
+import { useJob, useJobStats } from "../hooks/useJobs"
+import { useRunJob } from "../hooks/useRuns"
+import { Card, CardContent } from "../components/ui/card"
+import { Button } from "../components/ui/button"
+import { Skeleton } from "../components/ui/skeleton"
 import {
   Activity,
   Clock,
   TrendingUp,
   FileText,
   ArrowLeft,
-} from 'lucide-react'
+  Play,
+} from "lucide-react"
 
 /* ----------------------------------
    Small Insight Card
@@ -24,16 +25,14 @@ function InsightCard({ label, value, icon: Icon, accent }) {
         bg-white/5
         backdrop-blur
         px-5 py-4
-        ${accent ? 'shadow-[0_0_28px_rgba(50,255,195,0.15)]' : ''}
+        ${accent ? "shadow-[0_0_28px_rgba(50,255,195,0.15)]" : ""}
       `}
     >
       <div className="flex items-center gap-3">
         <Icon className="w-5 h-5 text-[#32FFC3]" />
         <p className="text-sm text-gray-400">{label}</p>
       </div>
-      <p className="mt-2 text-2xl font-semibold text-white">
-        {value}
-      </p>
+      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
     </div>
   )
 }
@@ -44,6 +43,9 @@ export default function JobDetails() {
 
   const { data: job, isLoading: jobLoading, error: jobError } = useJob(jobId)
   const { data: stats, isLoading: statsLoading } = useJobStats(jobId)
+
+  // 🔥 Phase 9B: Manual Run hook
+  const runMutation = useRunJob(jobId)
 
   if (jobLoading) {
     return (
@@ -77,7 +79,7 @@ export default function JobDetails() {
       {/* Back */}
       <Button
         variant="ghost"
-        onClick={() => navigate('/dashboard')}
+        onClick={() => navigate("/dashboard")}
         className="text-gray-400 hover:text-[#32FFC3] w-fit"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -87,7 +89,7 @@ export default function JobDetails() {
       {/* Hero */}
       <div>
         <h1 className="text-3xl font-semibold text-white tracking-tight">
-          {job.name || 'Unnamed Job'}
+          {job.name || "Unnamed Job"}
         </h1>
         <a
           href={job.url}
@@ -103,23 +105,23 @@ export default function JobDetails() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <InsightCard
           label="Total Versions"
-          value={statsLoading ? '—' : statsData.totalVersions || 0}
+          value={statsLoading ? "—" : statsData.totalVersions || 0}
           icon={FileText}
           accent
         />
         <InsightCard
           label="High Changes"
-          value={statsLoading ? '—' : statsData.highCount || 0}
+          value={statsLoading ? "—" : statsData.highCount || 0}
           icon={TrendingUp}
         />
         <InsightCard
           label="Average Score"
           value={
             statsLoading
-              ? '—'
+              ? "—"
               : statsData.avgScore
               ? statsData.avgScore.toFixed(3)
-              : '0.000'
+              : "0.000"
           }
           icon={Activity}
         />
@@ -127,10 +129,10 @@ export default function JobDetails() {
           label="Last Run"
           value={
             statsLoading
-              ? '—'
+              ? "—"
               : statsData.lastRunAt
               ? new Date(statsData.lastRunAt).toLocaleString()
-              : 'Never'
+              : "Never"
           }
           icon={Clock}
         />
@@ -138,9 +140,19 @@ export default function JobDetails() {
 
       {/* Primary Actions */}
       <Card className="bg-white/5 border border-white/5 backdrop-blur">
-        <CardContent className="flex flex-wrap gap-4 py-6">
+        <CardContent className="flex flex-wrap gap-4 py-6 items-center">
+          {/* 🔥 Run Now */}
           <Button
-            
+            onClick={() => runMutation.mutate()}
+            disabled={runMutation.isLoading}
+            className="gap-2"
+          >
+            <Play className="w-4 h-4" />
+            {runMutation.isLoading ? "Running…" : "Run Now"}
+          </Button>
+
+          <Button
+            variant="outline"
             onClick={() => navigate(`/jobs/${jobId}/history`)}
           >
             View History
@@ -163,6 +175,19 @@ export default function JobDetails() {
               View Latest Version
             </Button>
           )}
+
+          {/* Feedback */}
+          {runMutation.isError && (
+            <span className="text-sm text-red-400 ml-2">
+              Failed to trigger run
+            </span>
+          )}
+
+          {runMutation.isSuccess && (
+            <span className="text-sm text-[#32FFC3] ml-2">
+              Run queued successfully
+            </span>
+          )}
         </CardContent>
       </Card>
 
@@ -170,13 +195,13 @@ export default function JobDetails() {
       <Card className="bg-white/5 border border-white/5">
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 text-sm">
           <Meta label="Job ID" value={job._id} />
-          <Meta label="Schedule" value={job.schedule || 'Not scheduled'} />
+          <Meta label="Schedule" value={job.schedule || "Not scheduled"} />
           <Meta
             label="Created At"
             value={
               job.createdAt
                 ? new Date(job.createdAt).toLocaleString()
-                : '—'
+                : "—"
             }
           />
           <Meta
@@ -184,7 +209,7 @@ export default function JobDetails() {
             value={
               statsData.firstRunAt
                 ? new Date(statsData.firstRunAt).toLocaleString()
-                : 'Never'
+                : "Never"
             }
           />
         </CardContent>
@@ -200,9 +225,7 @@ function Meta({ label, value }) {
   return (
     <div>
       <p className="text-gray-400">{label}</p>
-      <p className="text-gray-100 mt-1 font-mono break-all">
-        {value}
-      </p>
+      <p className="text-gray-100 mt-1 font-mono break-all">{value}</p>
     </div>
   )
 }

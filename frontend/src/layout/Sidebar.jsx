@@ -25,10 +25,10 @@ const NAV = [
         icon: LayoutGrid,
       },
       {
-        label: "Jobs",
-        path: "/jobs",
+        label: "New Jobs",
+        path: "/jobs/new",
         icon: Briefcase,
-        disabled: true, // future-ready
+        disabled: false, 
       },
     ],
   },
