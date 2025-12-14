@@ -4,6 +4,7 @@ import { Card, CardContent } from '../components/ui/card'
 import { Skeleton } from '../components/ui/skeleton'
 import { ChangeLabelBadge } from '../components/ChangeLabelBadge'
 import { Button } from '../components/ui/button'
+import { ArrowLeft, Clock, Activity } from 'lucide-react'
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -11,12 +12,10 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-  Title,
   Tooltip,
-  Legend,
 } from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip)
 
 export default function JobHistory() {
   const { jobId } = useParams()
@@ -25,46 +24,42 @@ export default function JobHistory() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <Skeleton className="h-8 w-48 mb-6" />
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
+      <div className="space-y-8">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-64" />
+        {[1, 2].map((i) => (
+          <Skeleton key={i} className="h-28" />
+        ))}
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-red-600">Error loading history: {error.message || 'Unknown error'}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="bg-white/5 border border-white/5">
+        <CardContent className="pt-6 text-red-400">
+          Failed to load job history
+        </CardContent>
+      </Card>
     )
   }
 
-  const historyData = data || {};
-  const timeline = historyData.timeline || [];
+  const timeline = data?.timeline || []
 
+  const scored = timeline.filter(
+    (i) => i.version != null && i.analysisScore != null
+  )
 
   const chartData = {
-    labels: timeline
-      .filter((item) => item.version !== null && item.analysisScore !== null)
-      .map((item) => `v${item.version}`),
+    labels: scored.map((i) => `v${i.version}`),
     datasets: [
       {
-        label: 'Change Score',
-        data: timeline
-          .filter((item) => item.version !== null && item.analysisScore !== null)
-          .map((item) => item.analysisScore),
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.1,
+        data: scored.map((i) => i.analysisScore),
+        borderColor: '#32FFC3',
+        backgroundColor: 'rgba(50,255,195,0.06)',
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: '#32FFC3',
       },
     ],
   }
@@ -72,99 +67,148 @@ export default function JobHistory() {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Change Score Over Versions',
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0C0F14',
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        titleColor: '#fff',
+        bodyColor: '#9BA2B0',
       },
     },
     scales: {
+      x: {
+        ticks: { color: '#6B7280' },
+        grid: { display: false },
+      },
       y: {
         beginAtZero: true,
         max: 1,
+        ticks: { color: '#6B7280' },
+        grid: { color: 'rgba(255,255,255,0.04)' },
       },
     },
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Job History</h1>
-        <p className="text-gray-600">
-          Job ID: <span className="font-mono">{jobId}</span>
+    <div className="space-y-12">
+      {/* Back */}
+      <Button
+        variant="ghost"
+        onClick={() => navigate(-1)}
+        className="text-gray-400 hover:text-[#32FFC3] w-fit"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back
+      </Button>
+
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-semibold text-white">
+          History Timeline
+        </h1>
+        <p className="text-sm text-gray-400 mt-1">
+          Evolution of content changes over time
         </p>
-        {historyData.url && (
-          <p className="text-gray-600">
-            URL: <a href={historyData.url} className="text-blue-600 hover:underline">{historyData.url}</a>
-          </p>
-        )}
       </div>
 
-      {timeline.length > 0 && (
-        <Card className="mb-6">
+      {/* Chart */}
+      {scored.length > 0 && (
+        <Card className="bg-white/5 border border-white/5 backdrop-blur">
           <CardContent className="pt-6">
             <Line data={chartData} options={chartOptions} />
           </CardContent>
         </Card>
       )}
 
-      <div className="space-y-4">
+      {/* Timeline */}
+      <div className="relative space-y-6">
+        {/* Vertical axis */}
+        <div className="absolute left-4 top-0 bottom-0 w-px bg-white/10" />
+
         {timeline.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-gray-500 py-8">No history available for this job.</p>
+          <Card className="bg-white/5 border border-white/5">
+            <CardContent className="py-10 text-center text-gray-500">
+              No history available
             </CardContent>
           </Card>
         ) : (
-          timeline.map((item, index) => (
-            <Card key={index} className="relative">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l-lg" />
-              <CardContent className="pt-6 pl-8">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold">Version {item.version ?? 'N/A'}</h3>
-                      <ChangeLabelBadge label={item.analysisLabel} />
-                      {item.status && (
-                        <span
-                          className={`text-xs px-2 py-1 rounded ${
-                            item.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {item.status}
-                        </span>
+          timeline.map((item, index) => {
+            const intensity =
+              item.analysisScore >= 0.7
+                ? 'border-red-500/30'
+                : item.analysisScore >= 0.3
+                ? 'border-yellow-500/30'
+                : 'border-white/10'
+
+            return (
+              <div key={index} className="relative pl-12">
+                {/* Node */}
+                <div
+                  className="
+                    absolute left-2 top-6
+                    w-4 h-4 rounded-full
+                    bg-[#32FFC3]
+                    shadow-[0_0_16px_rgba(50,255,195,0.5)]
+                  "
+                />
+
+                <Card
+                  className={`
+                    bg-white/5
+                    backdrop-blur
+                    border ${intensity}
+                    hover:border-[#32FFC3]/40
+                    transition
+                  `}
+                >
+                  <CardContent className="py-5 flex items-start justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-medium text-white">
+                          Version {item.version ?? '—'}
+                        </h3>
+                        <ChangeLabelBadge label={item.analysisLabel} />
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <Clock className="w-4 h-4" />
+                        {item.createdAt
+                          ? new Date(item.createdAt).toLocaleString()
+                          : 'No timestamp'}
+                      </div>
+
+                      {item.analysisScore != null && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Activity className="w-4 h-4 text-[#32FFC3]" />
+                          <span className="text-gray-300">
+                            Change score:
+                          </span>
+                          <span className="text-[#32FFC3] font-medium">
+                            {item.analysisScore.toFixed(4)}
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 mb-2">
-                      {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'No timestamp'}
-                    </p>
-                    {item.analysisScore !== null && (
-                      <p className="text-sm text-gray-700">
-                        Change Score: <span className="font-medium">{item.analysisScore.toFixed(4)}</span>
-                      </p>
+
+                    {item.version && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          navigate(`/jobs/${jobId}/version/${item.version}`)
+                        }
+                      >
+                        Inspect
+                      </Button>
                     )}
-                    {item.analysisStatus && (
-                      <p className="text-sm text-gray-700">Analysis Status: {item.analysisStatus}</p>
-                    )}
-                  </div>
-                  {item.version && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/jobs/${jobId}/version/${item.version}`)}
-                    >
-                      View Version
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                  </CardContent>
+                </Card>
+              </div>
+            )
+          })
         )}
       </div>
     </div>
   )
 }
-
