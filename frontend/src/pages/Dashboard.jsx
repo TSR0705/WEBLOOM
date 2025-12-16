@@ -10,6 +10,7 @@ import {
 } from '../components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Skeleton } from '../components/ui/skeleton'
+import { Badge } from '../components/ui/badge'
 import { ChangeLabelBadge } from '../components/ChangeLabelBadge'
 
 /* -------------------------------
@@ -22,6 +23,8 @@ function DashboardRow({ job }) {
 
   const timeline = history?.data?.timeline || []
   const lastChange = timeline[timeline.length - 1]
+  const activeRun = stats?.data?.activeRun
+  const isRunActive = activeRun && !['completed', 'failed'].includes(activeRun.status)
 
   return (
     <TableRow
@@ -35,6 +38,18 @@ function DashboardRow({ job }) {
     >
       <TableCell className="font-medium text-gray-100">
         {job.name || 'Unnamed Job'}
+      </TableCell>
+
+      <TableCell>
+        {statsLoading ? (
+          <Skeleton className="h-5 w-16" />
+        ) : isRunActive ? (
+          <Badge variant={activeRun.status === 'running' ? 'success' : 'warning'}>
+            {activeRun.status === 'running' ? 'Running' : 'Queued'}
+          </Badge>
+        ) : (
+          <Badge variant="secondary">Idle</Badge>
+        )}
       </TableCell>
 
       <TableCell className="max-w-[260px] truncate text-gray-400">
@@ -158,6 +173,7 @@ export default function Dashboard() {
             <TableHeader className="sticky top-0 bg-[#0C0F14] z-10">
               <TableRow className="border-white/10">
                 <TableHead className="text-gray-400">Job</TableHead>
+                <TableHead className="text-gray-400">Status</TableHead>
                 <TableHead className="text-gray-400">URL</TableHead>
                 <TableHead className="text-gray-400">Versions</TableHead>
                 <TableHead className="text-gray-400">Last Change</TableHead>
@@ -170,7 +186,7 @@ export default function Dashboard() {
               {jobs.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center text-gray-500 py-10"
                   >
                     No jobs found. Create one to start monitoring.

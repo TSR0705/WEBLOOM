@@ -4,6 +4,7 @@ import { Card, CardContent } from '../components/ui/card'
 import { Skeleton } from '../components/ui/skeleton'
 import { ChangeLabelBadge } from '../components/ChangeLabelBadge'
 import { Button } from '../components/ui/button'
+import { Badge } from '../components/ui/badge'
 import { ArrowLeft, Clock, Activity } from 'lucide-react'
 import { Line } from 'react-chartjs-2'
 import {
@@ -169,6 +170,16 @@ export default function JobHistory() {
                           Version {item.version ?? '—'}
                         </h3>
                         <ChangeLabelBadge label={item.analysisLabel} />
+                        {item.status && (
+                          <Badge variant={
+                            item.status === 'completed' ? 'success' :
+                            item.status === 'failed' ? 'destructive' :
+                            item.status === 'running' ? 'success' :
+                            'warning'
+                          }>
+                            {item.status}
+                          </Badge>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-gray-400">

@@ -146,6 +146,20 @@ async function getJobStats(jobId) {
     ])
     .toArray();
 
+  // Get active run (not completed or failed)
+  const [activeRun] = await db
+    .collection("job_runs")
+    .find({ jobId: id, status: { $nin: ['completed', 'failed'] } })
+    .sort({ startedAt: -1 })
+    .limit(1)
+    .toArray();
+
+  const activeRunData = activeRun ? {
+    runId: activeRun._id.toString(),
+    status: activeRun.status,
+    startedAt: activeRun.startedAt,
+  } : null;
+
   return {
     totalVersions: snapshotAgg?.totalVersions || 0,
     highCount: changeAgg?.highCount || 0,
@@ -154,6 +168,7 @@ async function getJobStats(jobId) {
     avgScore: changeAgg?.avgScore ?? null,
     firstRunAt: runAgg?.firstRunAt || null,
     lastRunAt: runAgg?.lastRunAt || null,
+    activeRun: activeRunData,
   };
 }
 

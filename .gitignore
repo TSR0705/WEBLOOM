@@ -13,3 +13,9 @@ agents/health-monitor-agent/.env
 agents/discovery-agent/.env
 
 NODE_MODULES
+
+PHASE_9C_CODE_CHANGES.md
+PHASE_9C_FIX_EXPLANATION.md
+PHASE_9C_TESTING_GUIDE.md
+PHASE_9C_COMPLETE_SUMMARY.md
+frontend\dist

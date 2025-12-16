@@ -3,6 +3,7 @@ import { useJob, useJobStats } from "../hooks/useJobs"
 import { useRunJob } from "../hooks/useRuns"
 import { Card, CardContent } from "../components/ui/card"
 import { Button } from "../components/ui/button"
+import { Badge } from "../components/ui/badge"
 import { Skeleton } from "../components/ui/skeleton"
 import {
   Activity,
@@ -73,6 +74,10 @@ export default function JobDetails() {
 
   const statsData = stats?.data || {}
   const latestVersion = statsData.totalVersions || 0
+  const activeRun = statsData.activeRun
+
+  // Determine if run is active
+  const isRunActive = activeRun && !['completed', 'failed'].includes(activeRun.status)
 
   return (
     <div className="space-y-10">
@@ -88,9 +93,16 @@ export default function JobDetails() {
 
       {/* Hero */}
       <div>
-        <h1 className="text-3xl font-semibold text-white tracking-tight">
-          {job.name || "Unnamed Job"}
-        </h1>
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-semibold text-white tracking-tight">
+            {job.name || "Unnamed Job"}
+          </h1>
+          {isRunActive && (
+            <Badge variant={activeRun.status === 'running' ? 'success' : 'warning'}>
+              {activeRun.status === 'running' ? 'Running' : 'Queued'}
+            </Badge>
+          )}
+        </div>
         <a
           href={job.url}
           target="_blank"
@@ -141,14 +153,17 @@ export default function JobDetails() {
       {/* Primary Actions */}
       <Card className="bg-white/5 border border-white/5 backdrop-blur">
         <CardContent className="flex flex-wrap gap-4 py-6 items-center">
-          {/* 🔥 Run Now */}
+          {/* 🔥 Run Now - Disable during active run or mutation */}
           <Button
             onClick={() => runMutation.mutate()}
-            disabled={runMutation.isLoading}
+            disabled={runMutation.isPending || isRunActive}
             className="gap-2"
           >
             <Play className="w-4 h-4" />
-            {runMutation.isLoading ? "Running…" : "Run Now"}
+            {runMutation.isPending ? "Triggering…" : 
+             isRunActive ? 
+               (activeRun.status === 'running' ? "Run in progress…" : "Run queued…") : 
+               "Run Now"}
           </Button>
 
           <Button
@@ -176,16 +191,18 @@ export default function JobDetails() {
             </Button>
           )}
 
-          {/* Feedback */}
+          {/* Feedback - Show error or success */}
           {runMutation.isError && (
             <span className="text-sm text-red-400 ml-2">
-              Failed to trigger run
+              {runMutation.error?.response?.status === 409 
+                ? "A run is already active for this job" 
+                : "Failed to trigger run"}
             </span>
           )}
 
-          {runMutation.isSuccess && (
+          {runMutation.isSuccess && !isRunActive && (
             <span className="text-sm text-[#32FFC3] ml-2">
-              Run queued successfully
+              Run Completed Successfully.
             </span>
           )}
         </CardContent>

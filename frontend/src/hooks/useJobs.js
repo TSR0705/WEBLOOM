@@ -1,3 +1,4 @@
+import React from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { jobsApi } from "../api/jobs"
 
@@ -21,11 +22,33 @@ export function useJob(jobId) {
 }
 
 export function useJobStats(jobId) {
-  return useQuery({
+  // PHASE 9C FIX: Explicit shouldPoll state to control polling
+  // This fixes the stale data problem where refetchInterval couldn't
+  // reliably detect when to start/stop polling
+  const [shouldPoll, setShouldPoll] = React.useState(false);
+
+  const query = useQuery({
     queryKey: ["job-stats", jobId],
     queryFn: () => jobsApi.getStats(jobId),
     enabled: !!jobId,
-  })
+    // Poll every 3 seconds ONLY when shouldPoll is true
+    // When false, polling stops completely (refetchInterval: false)
+    refetchInterval: shouldPoll ? 3000 : false,
+    // Continue polling even if user switches tabs
+    refetchIntervalInBackground: true,
+  });
+
+  // Effect: Monitor activeRun status and control polling
+  // Runs whenever activeRun.status changes (from mutation or polling)
+  React.useEffect(() => {
+    const activeRun = query.data?.data?.activeRun;
+    // Start polling if activeRun exists and status is not final
+    const isActive =
+      activeRun && !["completed", "failed"].includes(activeRun.status);
+    setShouldPoll(isActive);
+  }, [query.data?.data?.activeRun?.status]);
+
+  return query;
 }
 
 export function useJobHistory(jobId) {
@@ -52,10 +75,6 @@ export function useJobCompare(jobId, v1, v2) {
   })
 }
 
-/* -------------------------
-   MUTATIONS (Phase 9B)
--------------------------- */
-
 /**
  * Create a new monitoring job
  * Payload: { name, url }
@@ -68,22 +87,6 @@ export function useCreateJob() {
     onSuccess: () => {
       // Refresh dashboard list
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
-    },
-  })
-}
-
-/**
- * Manually trigger a job run
- */
-export function useRunJob() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ jobId }) => jobsApi.run(jobId), // POST /jobs/:id/run
-    onSuccess: (_, { jobId }) => {
-      // Refresh everything related to that job
-      queryClient.invalidateQueries({ queryKey: ["job-history", jobId] })
-      queryClient.invalidateQueries({ queryKey: ["job-stats", jobId] })
     },
   })
 }

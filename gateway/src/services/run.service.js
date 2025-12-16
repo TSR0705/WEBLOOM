@@ -20,4 +20,13 @@ async function updateJobRunStatus(runId, status) {
     );
 }
 
-module.exports = { createJobRun, updateJobRunStatus };
+async function hasActiveRun(jobId) {
+  const db = await getDB();
+  const activeRun = await db.collection("job_runs").findOne({ 
+    jobId, 
+    status: { $nin: ['completed', 'failed'] } 
+  });
+  return !!activeRun;
+}
+
+module.exports = { createJobRun, updateJobRunStatus, hasActiveRun };
