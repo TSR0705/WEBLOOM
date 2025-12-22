@@ -78,6 +78,12 @@ async function startParser() {
       const payload = JSON.parse(msg.content.toString());
       const { jobId, runId, url, html } = payload;
 
+      // Mark run as running when we start processing
+      await db.collection("job_runs").updateOne(
+        { _id: new ObjectId(runId) },
+        { $set: { status: "running" } }
+      );
+
       console.log(`🧠 Parsing HTML for: ${url}`);
 
       const $ = cheerio.load(html);
@@ -115,30 +121,46 @@ async function startParser() {
 
       await db.collection("job_runs").updateOne(
         { _id: new ObjectId(runId) },
-        { $set: { status: "completed", finishedAt: new Date() , runVersion: version } }
+        { $set: { runVersion: version } }
       );
 
       console.log(`✨ Snapshot saved — version v${version}`);
 
-      // 👇 THIS IS THE LINE YOU MISSED EARLIER
-      channel.publish(
-        "snapshot.exchange",
-        "",
-        Buffer.from(JSON.stringify({
-          jobId,
-          runId,
-          url,
-          currentVersion: version
-        }))
-      );
+      // Publish to snapshot.created queue for storage agent
+      const snapshotPayload = JSON.stringify({
+        jobId,
+        runId,
+        url,
+        html,
+        title,
+        version
+      });
 
-      console.log(`📌 Published snapshot-created event for version v${version}`);
+      channel.sendToQueue('snapshot.created', Buffer.from(snapshotPayload));
+      console.log(`📌 Published snapshot.created event for version v${version}`);
 
       channel.ack(msg);
 
     } catch (err) {
       console.error("❌ Parsing Error:", err);
-      channel.nack(msg, false, true);
+      
+      // Mark run as failed in database
+      try {
+        await db.collection("job_runs").updateOne(
+          { _id: new ObjectId(runId) },
+          {
+            $set: {
+              status: "failed",
+              finishedAt: new Date(),
+              error: err.message
+            }
+          }
+        );
+      } catch (dbErr) {
+        console.error("❌ Failed to mark run as failed in database:", dbErr);
+      }
+      
+      channel.ack(msg); // Acknowledge the message to prevent infinite retries
     }
   });
 

@@ -1,14 +1,13 @@
 {
-  "name": "scraper-agent",
+  "name": "storage-agent",
   "version": "1.0.0",
-  "description": "Webloom Scraper Agent",
+  "description": "Webloom Storage Agent",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js"
   },
   "dependencies": {
     "amqplib": "^0.10.3",
-    "axios": "^1.6.0",
-    "mongodb": "^4.17.1"
+    "mongodb": "^6.0.0"
   }
 }

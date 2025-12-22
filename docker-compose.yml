@@ -96,5 +96,34 @@ services:
       MONGODB_URI: mongodb://webloom-mongo:27017/webloom
       RABBITMQ_URI: amqp://guest:guest@webloom-rabbitmq:5672
 
+  # browser-agent:
+  #   build:
+  #     context: ./agents/browser-agent
+  #     dockerfile: Dockerfile
+  #   container_name: webloom-browser-agent
+  #   restart: always
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   environment:
+  #     NODE_ENV: production
+  #     RABBITMQ_URI: amqp://guest:guest@webloom-rabbitmq:5672
+
+  storage-agent:
+    build:
+      context: ./agents/storage-agent
+      dockerfile: Dockerfile
+    container_name: webloom-storage-agent
+    restart: always
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://webloom-mongo:27017/webloom
+      RABBITMQ_URI: amqp://guest:guest@webloom-rabbitmq:5672
+
 volumes:
   mongo_data:

@@ -16,6 +16,12 @@ export function ChangeLabelBadge({ label }) {
   }
 
   const styles = {
+    negligible: `
+      bg-gray-500/15
+      text-gray-400
+      border border-gray-400/30
+      
+    `,
     low: `
       bg-[#32FFC3]/15
       text-[#32FFC3]
@@ -33,6 +39,12 @@ export function ChangeLabelBadge({ label }) {
       text-[#FF4E66]
       border border-[#FF4E66]/30
       
+    `,
+    significant: `
+      bg-[#FF0000]/20
+      text-[#FF4E66]
+      border border-[#FF4E66]/50
+      font-bold
     `,
   }
 
