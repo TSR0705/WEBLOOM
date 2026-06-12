@@ -12,6 +12,7 @@ import {
   FileText,
   ArrowLeft,
   Play,
+  ExternalLink
 } from "lucide-react"
 
 /* ----------------------------------
@@ -21,19 +22,24 @@ function InsightCard({ label, value, icon: Icon, accent }) {
   return (
     <div
       className={`
-        rounded-xl
-        border border-white/5
-        bg-white/5
-        backdrop-blur
-        px-5 py-4
-        ${accent ? "shadow-[0_0_28px_rgba(50,255,195,0.15)]" : ""}
+        relative rounded-xl border p-5 transition-all duration-300 hover:-translate-y-[2px]
+        ${accent 
+          ? 'bg-gradient-to-br from-[#0a151f] to-[#04202b] border-[#32FFC3]/20 shadow-[0_0_20px_rgba(50,255,195,0.03)] hover:border-[#32FFC3]/40' 
+          : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+        }
       `}
     >
-      <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 text-[#32FFC3]" />
-        <p className="text-sm text-gray-400">{label}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-1 font-display">{label}</p>
+        {Icon && (
+          <div className={`p-2 rounded-lg ${accent ? 'bg-[#32FFC3]/10 text-[#32FFC3]' : 'bg-white/5 text-muted-1'}`}>
+            <Icon className="w-4 h-4" />
+          </div>
+        )}
       </div>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+      <p className="text-2xl font-bold text-white mt-3 font-display tracking-tight">
+        {value}
+      </p>
     </div>
   )
 }
@@ -80,36 +86,39 @@ export default function JobDetails() {
   const isRunActive = activeRun && !['completed', 'failed'].includes(activeRun.status)
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Back */}
       <Button
         variant="ghost"
         onClick={() => navigate("/dashboard")}
-        className="text-gray-400 hover:text-[#32FFC3] w-fit"
+        className="text-muted-1 hover:text-white font-display font-medium text-xs px-2 h-8"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Dashboard
       </Button>
 
-      {/* Hero */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-semibold text-white tracking-tight">
+      {/* Hero Header */}
+      <div className="border-b border-white/5 pb-6">
+        <div className="flex items-center gap-4 flex-wrap">
+          <h1 className="text-3xl font-bold text-white tracking-tight font-display">
             {job.name || "Unnamed Job"}
           </h1>
-          {isRunActive && (
+          {isRunActive ? (
             <Badge variant={activeRun.status === 'running' ? 'success' : 'warning'}>
               {activeRun.status === 'running' ? 'Running' : 'Queued'}
             </Badge>
+          ) : (
+            <Badge variant="default">Idle</Badge>
           )}
         </div>
         <a
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-[#32FFC3] hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs text-[#32FFC3] hover:underline mt-2 font-mono"
         >
           {job.url}
+          <ExternalLink className="w-3 h-3" />
         </a>
       </div>
 
@@ -151,15 +160,16 @@ export default function JobDetails() {
       </div>
 
       {/* Primary Actions */}
-      <Card className="bg-white/5 border border-white/5 backdrop-blur">
-        <CardContent className="flex flex-wrap gap-4 py-6 items-center">
+      <Card className="glass-panel border-white/5 overflow-hidden">
+        <CardContent className="flex flex-wrap gap-4 py-5 items-center">
           {/* 🔥 Run Now - Disable during active run or mutation */}
           <Button
+            variant="primary"
             onClick={() => runMutation.mutate()}
             disabled={runMutation.isPending || isRunActive}
-            className="gap-2"
+            className="gap-2 font-display font-semibold"
           >
-            <Play className="w-4 h-4" />
+            <Play className="w-4 h-4 fill-current" />
             {runMutation.isPending ? "Triggering…" : 
              isRunActive ? 
                (activeRun.status === 'running' ? "Run in progress…" : "Run queued…") : 
@@ -169,6 +179,7 @@ export default function JobDetails() {
           <Button
             variant="outline"
             onClick={() => navigate(`/jobs/${jobId}/history`)}
+            className="font-display font-medium"
           >
             View History
           </Button>
@@ -176,6 +187,7 @@ export default function JobDetails() {
           <Button
             variant="outline"
             onClick={() => navigate(`/jobs/${jobId}/compare`)}
+            className="font-display font-medium"
           >
             Compare Versions
           </Button>
@@ -186,6 +198,7 @@ export default function JobDetails() {
               onClick={() =>
                 navigate(`/jobs/${jobId}/version/${latestVersion}`)
               }
+              className="font-display font-medium"
             >
               View Latest Version
             </Button>
@@ -193,7 +206,7 @@ export default function JobDetails() {
 
           {/* Feedback - Show error or success */}
           {runMutation.isError && (
-            <span className="text-sm text-red-400 ml-2">
+            <span className="text-xs text-[#FF4E66] font-mono font-medium ml-2">
               {runMutation.error?.response?.status === 409 
                 ? "A run is already active for this job" 
                 : "Failed to trigger run"}
@@ -201,7 +214,7 @@ export default function JobDetails() {
           )}
 
           {runMutation.isSuccess && !isRunActive && (
-            <span className="text-sm text-[#32FFC3] ml-2">
+            <span className="text-xs text-[#32FFC3] font-mono font-medium ml-2">
               Run Completed Successfully.
             </span>
           )}
@@ -209,7 +222,7 @@ export default function JobDetails() {
       </Card>
 
       {/* Metadata */}
-      <Card className="bg-white/5 border border-white/5">
+      <Card className="glass-panel border-white/5 overflow-hidden">
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 text-sm">
           <Meta label="Job ID" value={job._id} />
           <Meta label="Schedule" value={job.schedule || "Not scheduled"} />
@@ -240,9 +253,9 @@ export default function JobDetails() {
 ----------------------------------- */
 function Meta({ label, value }) {
   return (
-    <div>
-      <p className="text-gray-400">{label}</p>
-      <p className="text-gray-100 mt-1 font-mono break-all">{value}</p>
+    <div className="space-y-1">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-1 font-display">{label}</p>
+      <p className="text-sm text-white font-mono break-all bg-white/[0.01] border border-white/5 rounded-lg px-3 py-2">{value}</p>
     </div>
   )
 }

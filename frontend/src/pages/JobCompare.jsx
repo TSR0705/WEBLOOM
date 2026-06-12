@@ -43,39 +43,40 @@ export default function JobCompare() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Back */}
       <Button
         variant="ghost"
         onClick={() => navigate(`/jobs/${jobId}/details`)}
-        className="text-gray-400 hover:text-[#32FFC3] w-fit"
+        className="text-muted-1 hover:text-white font-display font-medium text-xs px-2 h-8"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Job
       </Button>
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-semibold text-white">
+      <div className="border-b border-white/5 pb-6">
+        <h1 className="text-3xl font-bold text-white tracking-tight font-display">
           Version Comparison
         </h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-muted-1 mt-1 text-sm">
           Inspect structural and semantic changes between snapshots
         </p>
       </div>
 
       {/* Version Selector */}
-      <Card className="bg-white/5 border border-white/5 backdrop-blur">
+      <Card className="glass-panel border-white/5 overflow-hidden">
         <CardContent className="py-6 flex flex-col md:flex-row gap-6">
           <div className="flex-1">
-            <p className="text-xs text-gray-400 mb-1">Base Version</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-1 font-display mb-2">Base Version</p>
             <select
               value={v1}
               onChange={e => setV1(Number(e.target.value))}
               className="
-                w-full bg-black/40 border border-white/10
-                rounded-lg px-3 py-2 text-gray-200
-                focus:outline-none focus:ring-1 focus:ring-[#32FFC3]
+                w-full bg-[#030508] border border-white/10
+                rounded-lg px-3 py-2 text-white text-sm
+                focus:outline-none focus:border-[#32FFC3]/50 focus:ring-1 focus:ring-[#32FFC3]/50
+                font-mono font-medium transition-all duration-200
               "
             >
               {versions.map(v => (
@@ -85,14 +86,15 @@ export default function JobCompare() {
           </div>
 
           <div className="flex-1">
-            <p className="text-xs text-gray-400 mb-1">Target Version</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-1 font-display mb-2">Target Version</p>
             <select
               value={v2}
               onChange={e => setV2(Number(e.target.value))}
               className="
-                w-full bg-black/40 border border-white/10
-                rounded-lg px-3 py-2 text-gray-200
-                focus:outline-none focus:ring-1 focus:ring-[#32FFC3]
+                w-full bg-[#030508] border border-white/10
+                rounded-lg px-3 py-2 text-white text-sm
+                focus:outline-none focus:border-[#32FFC3]/50 focus:ring-1 focus:ring-[#32FFC3]/50
+                font-mono font-medium transition-all duration-200
               "
             >
               {versions.map(v => (
@@ -110,8 +112,8 @@ export default function JobCompare() {
 
       {/* Error */}
       {error && (
-        <Card className="bg-white/5 border border-white/5">
-          <CardContent className="py-6 text-red-400">
+        <Card className="glass-panel border-[#FF4E66]/20">
+          <CardContent className="py-6 text-xs text-[#FF4E66] font-mono">
             Failed to compare versions
           </CardContent>
         </Card>
@@ -121,19 +123,19 @@ export default function JobCompare() {
       {data && (
         <>
           {/* Summary */}
-          <Card className="bg-white/5 border border-white/5">
-            <CardContent className="py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="glass-panel border-white/5 overflow-hidden">
+            <CardContent className="py-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
               <div>
-                <p className="text-xs text-gray-400">Base</p>
-                <p className="text-lg text-white">v{data.baseVersion}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-1 font-display">Base Snapshot</p>
+                <p className="text-lg font-bold text-white font-mono mt-1">v{data.baseVersion}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Target</p>
-                <p className="text-lg text-white">v{data.targetVersion}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-1 font-display">Target Snapshot</p>
+                <p className="text-lg font-bold text-white font-mono mt-1">v{data.targetVersion}</p>
               </div>
               <div className="flex items-center gap-3">
-                <Badge className="bg-white/10 text-gray-200">
-                  {data.changeScore?.toFixed(4)}
+                <Badge variant="default" className="font-mono">
+                  Score: {data.changeScore?.toFixed(4)}
                 </Badge>
                 <ChangeLabelBadge label={data.changeLabel} />
               </div>
@@ -141,22 +143,22 @@ export default function JobCompare() {
           </Card>
 
           {/* Diff Panels */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Text */}
-            <Card className="bg-white/5 border border-white/5">
+            <Card className="glass-panel border-white/5 overflow-hidden">
               <CardContent className="py-6 space-y-6">
-                <div className="flex items-center gap-2 text-white">
+                <div className="flex items-center gap-2 border-b border-white/5 pb-3">
                   <FileDiff className="w-5 h-5 text-[#32FFC3]" />
-                  <h2 className="text-lg font-medium">Text Diff</h2>
+                  <h2 className="text-base font-semibold text-white font-display">Text Changes</h2>
                 </div>
 
                 <DiffBlock
-                  title="Added"
+                  title="Added lines"
                   items={data.diffs?.text?.added}
                   variant="positive"
                 />
                 <DiffBlock
-                  title="Removed"
+                  title="Removed lines"
                   items={data.diffs?.text?.removed}
                   variant="negative"
                 />
@@ -164,20 +166,22 @@ export default function JobCompare() {
             </Card>
 
             {/* Links */}
-            <Card className="bg-white/5 border border-white/5">
+            <Card className="glass-panel border-white/5 overflow-hidden">
               <CardContent className="py-6 space-y-6">
-                <div className="flex items-center gap-2 text-white">
+                <div className="flex items-center gap-2 border-b border-white/5 pb-3">
                   <Link2 className="w-5 h-5 text-[#32FFC3]" />
-                  <h2 className="text-lg font-medium">Link Diff</h2>
+                  <h2 className="text-base font-semibold text-white font-display">Link Changes</h2>
                 </div>
 
                 <DiffBlock
-                  title="Added"
+                  title="Added URLs"
                   items={data.diffs?.links?.added}
+                  variant="positive"
                 />
                 <DiffBlock
-                  title="Removed"
+                  title="Removed URLs"
                   items={data.diffs?.links?.removed}
+                  variant="negative"
                 />
               </CardContent>
             </Card>
@@ -190,30 +194,30 @@ export default function JobCompare() {
 
 function DiffBlock({ title, items = [], variant }) {
   return (
-    <div>
-      <p className="text-xs text-gray-400 mb-2">
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-1 font-display">
         {title} ({items.length})
       </p>
 
       {items.length === 0 ? (
-        <p className="text-sm text-gray-500">No changes</p>
+        <p className="text-xs text-muted-2 font-mono">No differences</p>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2 bg-black/25 p-3 rounded-lg border border-white/5">
           {items.slice(0, 40).map((item, i) => (
             <Badge
               key={i}
               className={`
-                text-xs
-                ${variant === 'positive' && 'bg-green-500/15 text-green-400'}
-                ${variant === 'negative' && 'bg-red-500/15 text-red-400'}
-                ${!variant && 'bg-white/10 text-gray-300'}
+                font-mono text-[10px] break-all lowercase
+                ${variant === 'positive' && 'bg-[#32FFC3]/10 text-[#32FFC3] border-[#32FFC3]/20'}
+                ${variant === 'negative' && 'bg-[#FF4E66]/10 text-[#FF4E66] border-[#FF4E66]/20'}
+                ${!variant && 'bg-white/5 text-gray-300 border-white/5'}
               `}
             >
               {item}
             </Badge>
           ))}
           {items.length > 40 && (
-            <span className="text-xs text-gray-500">
+            <span className="text-[10px] text-muted-2 font-mono self-center">
               +{items.length - 40} more
             </span>
           )}

@@ -18,4 +18,6 @@ PHASE_9C_CODE_CHANGES.md
 PHASE_9C_FIX_EXPLANATION.md
 PHASE_9C_TESTING_GUIDE.md
 PHASE_9C_COMPLETE_SUMMARY.md
-frontend\dist
+frontend/dist
+dist/
+node_modules/

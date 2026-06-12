@@ -96,7 +96,7 @@ export default function Sidebar() {
     <aside
       aria-label="Primary navigation"
       className={cn(
-        "relative flex min-h-dvh flex-col border-r border-white/5 bg-[#0C0F14]",
+        "relative flex h-full flex-col border-r border-white/5 bg-[#0C0F14]",
         "transition-[width] duration-300 ease-out",
         expanded ? "w-[240px]" : "w-[84px]"
       )}

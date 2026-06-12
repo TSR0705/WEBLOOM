@@ -3,12 +3,12 @@ import Sidebar from "./Sidebar"
 
 export default function AppLayout() {
   return (
-    <div className="min-h-screen bg-background text-gray-200 flex font-sans">
+    <div className="h-screen w-screen overflow-hidden bg-background text-gray-200 flex font-sans">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Shell */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
 
         {/* ───────────────── Liquid Green Glass Header (FULL STRIP) ───────────────── */}
         <header
@@ -147,10 +147,10 @@ export default function AppLayout() {
         </header>
 
         {/* ───────────────── Main Content ───────────────── */}
-        {/* 🔧 FIX 1: disable page scroll here */}
-        <main className="flex-1 overflow-hidden px-10 py-8">
+        {/* 🔧 FIX 1: enable scroll for main content */}
+        <main className="flex-1 overflow-y-auto px-10 py-8 scroll-smooth">
           {/* 🔧 FIX 2: give child full height */}
-          <div className="max-w-[1600px] mx-auto h-full">
+          <div className="max-w-[1600px] mx-auto min-h-full">
             <Outlet />
           </div>
         </main>

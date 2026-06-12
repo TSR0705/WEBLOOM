@@ -4,16 +4,7 @@ export function Card({ className, children, ...props }) {
   return (
     <div
       className={cn(
-        `
-        relative
-        rounded-xl
-        border border-white/5
-        bg-white/5
-        backdrop-blur
-        shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_40px_rgba(2,6,23,0.6)]
-        transition
-        hover:border-white/10
-        `,
+        "glass-card rounded-xl transition-glow duration-300",
         className
       )}
       {...props}
@@ -41,7 +32,7 @@ export function CardTitle({ className, children, ...props }) {
   return (
     <h3
       className={cn(
-        'text-lg font-semibold tracking-tight text-white',
+        'text-lg font-semibold tracking-tight text-white font-display',
         className
       )}
       {...props}
@@ -55,7 +46,7 @@ export function CardDescription({ className, children, ...props }) {
   return (
     <p
       className={cn(
-        'text-sm text-gray-400',
+        'text-sm text-muted-1',
         className
       )}
       {...props}

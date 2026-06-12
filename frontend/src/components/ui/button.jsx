@@ -12,30 +12,39 @@ export function Button({
       bg-[#32FFC3]
       text-[#061018]
       hover:bg-[#2FF8B6]
-      shadow-[0_0_20px_rgba(50,255,195,0.25)]
+      hover:shadow-[0_0_25px_rgba(50,255,195,0.4)]
+      hover:-translate-y-[1px]
+      active:translate-y-0
+      shadow-[0_0_20px_rgba(50,255,195,0.2)]
     `,
 
     outline: `
       border border-white/10
       bg-transparent
       text-gray-200
-      hover:border-[#32FFC3]/40
+      hover:border-[#32FFC3]/50
       hover:text-[#32FFC3]
       hover:bg-white/5
+      hover:-translate-y-[1px]
+      active:translate-y-0
     `,
 
     ghost: `
       bg-transparent
-      text-gray-400
+      text-muted-1
       hover:bg-white/5
       hover:text-[#32FFC3]
+      active:scale-95
     `,
 
     destructive: `
       bg-[#FF4E66]
       text-white
       hover:bg-[#FF667C]
-      shadow-[0_0_12px_rgba(255,78,102,0.35)]
+      hover:shadow-[0_0_18px_rgba(255,78,102,0.5)]
+      hover:-translate-y-[1px]
+      active:translate-y-0
+      shadow-[0_0_12px_rgba(255,78,102,0.25)]
     `,
   }
 

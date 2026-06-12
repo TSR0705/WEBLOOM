@@ -47,10 +47,10 @@ export function Badge({
         `
         inline-flex items-center gap-1
         rounded-full
-        px-3 py-1
-        text-xs font-medium
-        tracking-wide
-        transition
+        px-2.5 py-0.5
+        text-[10px] font-semibold font-display
+        tracking-wider uppercase
+        transition-all duration-300
         `,
         variants[variant],
         className

@@ -103,6 +103,7 @@ export default function JobHistory() {
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     animation: {
       duration: 1000,
       easing: 'easeOutQuart'
@@ -171,65 +172,79 @@ export default function JobHistory() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       {/* Back */}
       <Button
         variant="ghost"
         onClick={() => navigate(-1)}
-        className="text-gray-400 hover:text-[#32FFC3] w-fit"
+        className="text-muted-1 hover:text-white font-display font-medium text-xs px-2 h-8"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back
       </Button>
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-semibold text-white">
+      <div className="border-b border-white/5 pb-6">
+        <h1 className="text-3xl font-bold text-white tracking-tight font-display">
           History Timeline
         </h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-muted-1 mt-1 text-sm">
           Evolution of content changes over time
         </p>
-        <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg">
-          <h2 className="text-lg font-medium text-white mb-2">Enhanced Change Detection</h2>
-          <p className="text-sm text-gray-400">
+        
+        {/* Info panel */}
+        <div className="mt-5 p-5 glass-panel border border-white/5 rounded-xl">
+          <h2 className="text-sm font-semibold text-white mb-2 font-display uppercase tracking-wider">Enhanced Change Detection</h2>
+          <p className="text-xs text-muted-1 leading-relaxed">
             Our advanced algorithm analyzes multiple factors including text content, word structure, 
             titles, descriptions, and link structures to provide accurate change detection.
           </p>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <ChangeLabelBadge label="negligible" />
-            <span className="text-xs text-gray-400 self-center">Minimal changes (0-5%)</span>
-            <ChangeLabelBadge label="low" />
-            <span className="text-xs text-gray-400 self-center">Low changes (5-15%)</span>
-            <ChangeLabelBadge label="medium" />
-            <span className="text-xs text-gray-400 self-center">Medium changes (15-35%)</span>
-            <ChangeLabelBadge label="high" />
-            <span className="text-xs text-gray-400 self-center">High changes (35-70%)</span>
-            <ChangeLabelBadge label="significant" />
-            <span className="text-xs text-gray-400 self-center">Significant changes (70-100%)</span>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 pt-4 border-t border-white/5">
+            <div className="flex items-center gap-2">
+              <ChangeLabelBadge label="negligible" />
+              <span className="text-[11px] text-muted-1">Minimal (0-5%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ChangeLabelBadge label="low" />
+              <span className="text-[11px] text-muted-1">Low (5-15%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ChangeLabelBadge label="medium" />
+              <span className="text-[11px] text-muted-1">Medium (15-35%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ChangeLabelBadge label="high" />
+              <span className="text-[11px] text-muted-1">High (35-70%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ChangeLabelBadge label="significant" />
+              <span className="text-[11px] text-muted-1">Significant (70-100%)</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Chart */}
       {scored.length > 0 && (
-        <Card className="bg-white/5 border border-white/5 backdrop-blur">
+        <Card className="glass-panel border-white/5 overflow-hidden">
           <CardContent className="pt-6">
-            <h2 className="text-xl font-medium text-white mb-4">Enhanced Change Detection Trend</h2>
-            <p className="text-sm text-gray-400 mb-4">Multi-dimensional analysis of content evolution with improved accuracy</p>
-            <Line data={chartData} options={chartOptions} />
+            <h2 className="text-lg font-semibold text-white mb-1 font-display">Enhanced Change Detection Trend</h2>
+            <p className="text-xs text-muted-1 mb-6">Multi-dimensional analysis of content evolution with improved accuracy</p>
+            <div className="bg-white/[0.01] rounded-xl p-4 border border-white/5 h-[200px]">
+              <Line data={chartData} options={chartOptions} />
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* Timeline */}
-      <div className="relative space-y-6">
+      <div className="relative space-y-6 pb-12">
         {/* Vertical axis */}
-        <div className="absolute left-4 top-0 bottom-0 w-px bg-white/10" />
+        <div className="absolute left-[15px] top-4 bottom-4 w-[2px] bg-white/10" />
 
         {timeline.length === 0 ? (
-          <Card className="bg-white/5 border border-white/5">
-            <CardContent className="py-10 text-center text-gray-500">
+          <Card className="glass-panel border-white/5">
+            <CardContent className="py-12 text-center text-muted-2 text-sm">
               No history available
             </CardContent>
           </Card>
@@ -238,56 +253,50 @@ export default function JobHistory() {
             // Enhanced intensity visualization based on new change labels
             const intensity =
               item.analysisLabel === 'significant'
-                ? 'border-red-500/50 shadow-[0_0_16px_rgba(255,78,102,0.3)]'
+                ? 'border-red-500/30 shadow-[0_0_16px_rgba(255,78,102,0.05)]'
                 : item.analysisLabel === 'high'
-                ? 'border-red-500/30'
+                ? 'border-[#FF8E5E]/20'
                 : item.analysisLabel === 'medium'
-                ? 'border-yellow-500/30'
+                ? 'border-yellow-500/20'
                 : item.analysisLabel === 'low'
-                ? 'border-green-500/30'
+                ? 'border-green-500/20'
                 : item.analysisLabel === 'negligible'
                 ? 'border-gray-500/20'
                 : item.analysisScore === null
                 ? 'border-gray-500/10'
-                : 'border-white/10'
+                : 'border-white/5'
 
             return (
-              <div key={index} className="relative pl-12">
+              <div key={index} className="relative pl-12 group">
                 {/* Node */}
                 <div
                   className={`
-                    absolute left-2 top-6
-                    w-4 h-4 rounded-full
-                    ${item.analysisLabel === 'significant' ? 'bg-[#FF4E66]' : 
-                      item.analysisLabel === 'high' ? 'bg-[#FF8E5E]' : 
-                      item.analysisLabel === 'medium' ? 'bg-[#FFC35E]' : 
-                      item.analysisLabel === 'low' ? 'bg-[#32FFC3]' : 
+                    absolute left-[10px] top-[26px] z-10
+                    w-[12px] h-[12px] rounded-full border-2 border-[#030508]
+                    transition-all duration-300 group-hover:scale-125
+                    ${item.analysisLabel === 'significant' ? 'bg-[#FF4E66] shadow-[0_0_10px_rgba(255,78,102,0.6)]' : 
+                      item.analysisLabel === 'high' ? 'bg-[#FF8E5E] shadow-[0_0_10px_rgba(255,142,94,0.4)]' : 
+                      item.analysisLabel === 'medium' ? 'bg-[#FFC35E] shadow-[0_0_10px_rgba(255,195,94,0.4)]' : 
+                      item.analysisLabel === 'low' ? 'bg-[#32FFC3] shadow-[0_0_10px_rgba(50,255,195,0.4)]' : 
                       item.analysisLabel === 'negligible' ? 'bg-gray-500' : 
                       item.analysisScore === null ? 'bg-gray-400' : 
                       'bg-[#32FFC3]'}
-                    ${item.analysisLabel === 'significant' ? 'shadow-[0_0_16px_rgba(255,78,102,0.7)]' : 
-                      item.analysisLabel === 'high' ? 'shadow-[0_0_16px_rgba(255,142,94,0.5)]' : 
-                      item.analysisLabel === 'medium' ? 'shadow-[0_0_16px_rgba(255,195,94,0.5)]' : 
-                      item.analysisLabel === 'low' ? 'shadow-[0_0_16px_rgba(50,255,195,0.5)]' : 
-                      item.analysisLabel === 'negligible' ? 'shadow-[0_0_16px_rgba(128,128,128,0.3)]' : 
-                      item.analysisScore === null ? 'shadow-[0_0_16px_rgba(128,128,128,0.3)]' : 
-                      'shadow-[0_0_16px_rgba(50,255,195,0.5)]'}
                   `}
                 />
 
                 <Card
                   className={`
-                    bg-white/5
-                    backdrop-blur
+                    glass-panel
                     border ${intensity}
-                    hover:border-[#32FFC3]/40
-                    transition
+                    group-hover:border-[#32FFC3]/30
+                    group-hover:translate-x-[3px]
+                    transition-all duration-300
                   `}
                 >
-                  <CardContent className="py-5 flex items-start justify-between">
+                  <CardContent className="py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-medium text-white">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <h3 className="text-lg font-bold text-white font-display">
                           Version {item.version ?? '—'}
                         </h3>
                         <ChangeLabelBadge label={item.analysisLabel} />
@@ -303,32 +312,24 @@ export default function JobHistory() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Clock className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-xs text-muted-1 font-mono">
+                        <Clock className="w-3.5 h-3.5" />
                         {item.createdAt
                           ? new Date(item.createdAt).toLocaleString()
                           : 'No timestamp'}
                       </div>
 
                       {item.analysisScore != null && (
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Activity className="w-4 h-4 text-[#32FFC3]" />
-                            <span className="text-gray-300">
+                        <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+                          <div className="flex items-center gap-2 text-xs">
+                            <Activity className="w-3.5 h-3.5 text-[#32FFC3]" />
+                            <span className="text-muted-1">
                               Change score:
                             </span>
-                            <span className="text-[#32FFC3] font-medium">
-                              {item.analysisScore.toFixed(4)}
+                            <span className="text-[#32FFC3] font-mono font-bold">
+                              {(item.analysisScore * 100).toFixed(2)}%
                             </span>
                           </div>
-                          {item.analysisLabel && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <span className="text-gray-300">
-                                Change type:
-                              </span>
-                              <ChangeLabelBadge label={item.analysisLabel} />
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>
@@ -340,8 +341,9 @@ export default function JobHistory() {
                         onClick={() =>
                           navigate(`/jobs/${jobId}/version/${item.version}`)
                         }
+                        className="font-display font-medium self-start sm:self-auto"
                       >
-                        Inspect
+                        Inspect Version
                       </Button>
                     )}
                   </CardContent>
